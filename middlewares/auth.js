@@ -9,6 +9,7 @@ export const requireSignIn = async (req, res, next) => {
     );
     req.user = decode;
     next();
+    console.log('in requireSignIn');
   } catch (error) {
     console.log(error);
   }
