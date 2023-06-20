@@ -7,23 +7,23 @@ export const registerController = async (req, res) => {
     const { name, email, password, phone } = req.body;
 
     if (!name) {
-      return res.send({ error: "Name is Required!" });
+      return res.send({ message: "Name is Required!" });
     }
     if (!email) {
-      return res.send({ error: "E-mail is Required!" });
+      return res.send({ message: "E-mail is Required!" });
     }
     if (!password) {
-      return res.send({ error: "Password is Required!" });
+      return res.send({ message: "Password is Required!" });
     }
     if (!phone) {
-      return res.send({ error: "Phone is Required!" });
+      return res.send({ message: "Phone is Required!" });
     }
 
     const exisitingUser = await userModel.findOne({ email });
 
     if (exisitingUser) {
       return res.status(200).send({
-        success: true,
+        success: false,
         message: "You already have an account please Sign in!",
       });
     }
@@ -38,7 +38,7 @@ export const registerController = async (req, res) => {
 
     res.status(201).send({
       success: true,
-      message: "User Register Successfully!",
+      message: "Sign Up Succesfully!",
       user,
     });
   } catch (error) {
@@ -81,11 +81,13 @@ export const loginController = async (req, res) => {
     );
     res.status(200).send({
       success: true,
-      message: "Login Succesfully!",
+      message: "Sign In Succesfully!",
       user: {
+        _id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
+        role: user.role
       },
       token,
     });
@@ -93,7 +95,7 @@ export const loginController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Login failed!",
+      message: "Sign In failed!",
       error,
     });
   }
@@ -108,5 +110,46 @@ export const testController = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.send({ error });
+  }
+};
+
+export const forgotPasswordController = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email) {
+      res.status(400).send({
+        message: "Email is required!",
+        error,
+      });
+    }
+    if (!newPassword) {
+      res.status(400).send({
+        message: "New password is required!",
+        error,
+      });
+    }
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Email is wrong!",
+      });
+    }
+    const hashed = await hashPassword(newPassword);
+    await userModel.findByIdAndUpdate(user._id, { password: hashed });
+    res.status(200).send({
+      success: true,
+      message: "Password Changed Succesfully!",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Something went wrong!",
+      error,
+    });
   }
 };
